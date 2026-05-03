@@ -503,12 +503,28 @@ function Set-AppConfig {
     
     $sheetUrl = Read-Host "    Enter Google Sheet webhook URL"
     
+    $localPropsPath = Join-Path $ProjectDir "local.properties"
+    $localPropsContent = ""
+
+    # Find Android SDK
+    $sdkPath = "$env:LOCALAPPDATA\Android\Sdk"
+    if (Test-Path $sdkPath) {
+        $escapedSdkPath = $sdkPath -replace '\\', '\\' -replace ':', '\:'
+        $localPropsContent += "sdk.dir=$escapedSdkPath`n"
+    }
+
     if (-not [string]::IsNullOrEmpty($sheetUrl)) {
         $config.SheetUrl = $sheetUrl
-        Write-Host "[OK] Google Sheet URL saved to config" -ForegroundColor Green
+        $localPropsContent += "WEBHOOK_URL=$sheetUrl`n"
+        Write-Host "[OK] Google Sheet URL saved to config and local.properties" -ForegroundColor Green
     }
     else {
         Write-Host "[!] Skipping Google Sheet configuration" -ForegroundColor Yellow
+    }
+    
+    if ($localPropsContent) {
+        Set-Content -Path $localPropsPath -Value $localPropsContent
+        Write-Host "[OK] Generated local.properties" -ForegroundColor Green
     }
     
     # Save config
